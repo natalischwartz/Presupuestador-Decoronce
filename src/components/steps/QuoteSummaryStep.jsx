@@ -14,7 +14,10 @@ import {
   Wrench,
   DollarSign,
   Info,
+  Download
 } from "lucide-react";
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PresupuestoPDF } from './PresupuestoPDF';
 
 const BASE_PRICES = {
   CONFECTION: Number(import.meta.env.VITE_CONFECTION_PRICE),
@@ -650,15 +653,23 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
                 ${total.toLocaleString()}
               </span>
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button variant="outline" className="text-primary bg-white"
-               onClick={() => window.print()}>
-              Imprimir presupuesto
-            </Button>
-              <Button className=" bg-white text-primary hover:bg-white/90">
-                Confirmar pedido
+
+            <PDFDownloadLink 
+            document={<PresupuestoPDF data={data} />}
+            fileName={`presupuesto-cortinas-${Date.now()}.pdf`}
+          >
+            {({ blob, url, loading, error }) => (
+              <Button
+                variant="secondary"
+                className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                disabled={loading}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {loading ? 'Generando PDF...' : 'Descargar PDF'}
               </Button>
-            </div>
+            )}
+          </PDFDownloadLink>
+           
           </CardContent>
         </Card>
       </div>

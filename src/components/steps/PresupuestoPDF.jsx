@@ -1,0 +1,431 @@
+import React from 'react';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import logo from "/Imagenes/logo-decoronce-op2.png";
+
+// Precios base (deben coincidir con los de QuoteSummaryStep)
+const BASE_PRICES = {
+  CONFECTION: Number(import.meta.env.VITE_CONFECTION_PRICE) || 300,
+  CONFECTION_EXTRA: Number(import.meta.env.VITE_CONFECTION_EXTRA_PRICE) || 400,
+  RAIL: Number(import.meta.env.VITE_RAIL_PRICE) || 450,
+  INSTALLATION: Number(import.meta.env.VITE_INSTALLATION_PRICE) || 2500,
+  MEASUREMENT_CABA: Number(import.meta.env.VITE_MEASUREMENT_CABA_PRICE) || 1000,
+  MEASUREMENT_GBA: Number(import.meta.env.VITE_MEASUREMENT_GBA_PRICE) || 1500,
+};
+
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#ffffff',
+    padding: 30,
+    fontFamily: 'Helvetica',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: '#2c3e50',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 30,
+    color: '#7f8c8d',
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#2c3e50',
+  },
+  cardContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  card: {
+    width: '30%',
+    border: '1 solid #e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+  },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#2c3e50',
+  },
+  cardText: {
+    fontSize: 10,
+    marginBottom: 4,
+    color: '#5d6d7e',
+  },
+  costSection: {
+    border: '1 solid #e0e0e0',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  costHeader: {
+    backgroundColor: '#3E6553',
+    padding: 12,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  costHeaderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  costContent: {
+    padding: 15,
+  },
+  costItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottom: '1 solid #ecf0f1',
+  },
+  costLabel: {
+    fontSize: 12,
+    color: '#2c3e50',
+  },
+   costDetails: {
+    fontSize: 10,
+    color: '#7f8c8d',
+    fontStyle: 'italic',
+  },
+  costAmount: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTop: '2 solid #34495e',
+    marginTop: 8,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3E6553'
+,
+  },
+  contactSection: {
+    border: '1 solid #e0e0e0',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
+  },
+  contactTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#2c3e50',
+  },
+  contactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  contactLabel: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    width: '20%',
+  },
+  contactValue: {
+    fontSize: 12,
+    color: '#2c3e50',
+    width: '75%',
+    borderBottom: '1 solid #bdc3c7',
+    paddingBottom: 4,
+  },
+  infoSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  infoCard: {
+    width: '48%',
+    border: '1 solid #e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+  },
+  infoTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#2c3e50',
+  },
+  infoText: {
+    fontSize: 10,
+    marginBottom: 3,
+    color: '#5d6d7e',
+  },
+  includeCard: {
+    backgroundColor: '#e8f5e8',
+    borderColor: '#3E6553',
+  },
+  importantCard: {
+    backgroundColor: '#fff3cd',
+    borderColor: '#3E6553',
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginBottom: 20,
+    alignSelf: 'start',
+  }
+});
+
+
+
+
+// Función auxiliar para formatear medidas
+function formatMeasurement(value) {
+  if (typeof value !== "number" || isNaN(value)) return "--";
+  return value.toFixed(2);
+}
+
+// Para redondear al múltiplo de 0.5 más cercano (hacia arriba)
+function roundToHalf(value) {
+  return Math.ceil(value * 2) / 2;
+}
+
+// Calcular metros de riel necesarios
+const calcularMetrosRiel = (necesitaRiel, windowWidth, cantidadVentanasRiel = 1) => {
+  if (!necesitaRiel || !windowWidth) return 0;
+
+  // Calculamos metros necesarios (redondeando hacia arriba a múltiplos de 0.20m)
+  const metrosPorVentana = Math.ceil(windowWidth / 0.2) * 0.2;
+  return cantidadVentanasRiel * metrosPorVentana;
+};
+
+export const PresupuestoPDF = ({ data }) => {
+
+
+    const obtenerFechaFormateada = () => {
+  const fecha = new Date();
+  const año = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // "12" en lugar de "12"
+  const dia = String(fecha.getDate()).padStart(2, '0');      // "05" en lugar de "5"
+  
+  return `${dia}/${mes}/${año}`; // "05/12/2023"
+};
+
+  // 1. Obtener medidas de la cortina
+  const getWindowHeight = () => {
+    if (data.customHeight) {
+      return parseFloat(data.customHeight);
+    }
+    return 2.2; // Valor por defecto
+  };
+
+  const getWindowWidth = () => {
+    if (data.customWidth) {
+      return parseFloat(data.customWidth);
+    }
+    return 1.4; // Valor por defecto
+  };
+
+  const windowHeight = getWindowHeight();
+  const windowWidth = getWindowWidth();
+
+  // 2. Cálculo de tela necesaria
+  const anchoConMultiplicadorDeCabezal = windowWidth * (data.multiplier || 2);
+  const altoConAgregados = windowHeight + 0.3 + 0.1; // + dobladillo + cabezal
+
+  // Verificar si el ancho de la tela cubre el alto necesario
+  const anchoNumerico = parseFloat(data.fabricWidth || 3);
+  const anchoTelaCubreAlto = data.selectedFabric ? anchoNumerico > altoConAgregados : false;
+
+  let metrosTelaNecesarios = 0;
+  let panosNecesarios = 1;
+
+  if (anchoTelaCubreAlto) {
+    // Caso 1: El ancho de la tela cubre el alto
+    metrosTelaNecesarios = roundToHalf(anchoConMultiplicadorDeCabezal);
+  } else {
+    // Caso 2: Necesitamos calcular paños
+    panosNecesarios = Math.ceil(anchoConMultiplicadorDeCabezal / anchoNumerico);
+    metrosTelaNecesarios = panosNecesarios * altoConAgregados;
+  }
+
+  // 3. Cálculo de costos
+  // Precio de confección según altura
+  const precioConfeccion = windowHeight > 2.7 ? BASE_PRICES.CONFECTION_EXTRA : BASE_PRICES.CONFECTION;
+
+  // Costo de tela
+  const costoTotalTela = metrosTelaNecesarios * (data.fabricPrice || 0);
+
+  // Costo de confección
+  const costoConfeccion = anchoTelaCubreAlto
+    ? metrosTelaNecesarios * precioConfeccion
+    : Math.ceil(panosNecesarios * anchoNumerico) * precioConfeccion;
+
+  /*************RIEL *****************/
+  const metrosRiel = calcularMetrosRiel(
+    data.necesitaRiel, 
+    windowWidth, 
+    data.cantidadVentanasRiel || 1
+  );
+  const costoRiel = metrosRiel * BASE_PRICES.RAIL;
+
+  // Costo de instalación
+  const costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
+
+  /*************TOMA DE MEDIDAS *****************/
+  const costoTotalTM = data.necesitaTM
+    ? (data.cantidadVentanas || 1) *
+      (data.ubicacionTM === "CABA"
+        ? BASE_PRICES.MEASUREMENT_CABA
+        : BASE_PRICES.MEASUREMENT_GBA)
+    : 0;
+
+  // Total general
+  const subtotal = costoTotalTela + costoConfeccion + costoRiel + costoInstalacion + costoTotalTM;
+  const total = subtotal;
+
+  // Datos para mostrar
+  const costItems = [
+    {
+      label: 'Tela',
+      amount: costoTotalTela,
+      details: `${metrosTelaNecesarios.toFixed(2)}m x $${data.fabricPrice || 0}/m`,
+    },
+    {
+      label: 'Confección',
+      amount: costoConfeccion,
+      details: `${anchoTelaCubreAlto ? 'Corte simple' : `${panosNecesarios} paños`}`,
+    },
+    {
+      label: 'Toma de medidas',
+      amount: costoTotalTM,
+      included: data.necesitaTM,
+      details: data.necesitaTM
+        ? `${data.cantidadVentanas || 1} ventana(s) en ${data.ubicacionTM || 'CABA'}`
+        : 'No solicitado',
+    },
+    {
+      label: 'Rieles',
+      amount: costoRiel,
+      included: data.necesitaRiel,
+      details: data.necesitaRiel
+        ? `${metrosRiel.toFixed(2)}m (${data.cantidadVentanasRiel || 1} ventana(s))`
+        : 'No solicitado',
+    },
+    {
+      label: 'Instalación',
+      amount: costoInstalacion,
+      included: data.hasInstallation,
+      details: data.hasInstallation
+        ? 'Incluye instalación profesional'
+        : 'No requiere',
+    },
+  ];
+
+  return(
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Image src={"https://res.cloudinary.com/dzkzrdbfu/image/upload/v1757032272/logo-decoronce-op2_xy9nd8.png"} style={styles.logo}/>
+        <Text style={styles.subtitle}>
+          {obtenerFechaFormateada}
+        </Text>
+        {/* Header */}
+        <Text style={styles.header}>Resumen del Presupuesto</Text>
+        <Text style={styles.subtitle}>Aquí tenés el detalle completo de tu cotización</Text>
+
+         {/* Contact Information */}
+        <View style={styles.contactSection}>
+          <Text style={styles.contactTitle}>Información de Contacto</Text>
+          <View style={styles.contactRow}>
+            <Text style={styles.contactLabel}>Nombre</Text>
+            <Text style={styles.contactValue}>{data.customerInfo?.name || "No proporcionado"}</Text>
+          </View>
+          <View style={styles.contactRow}>
+            <Text style={styles.contactLabel}>Teléfono</Text>
+            <Text style={styles.contactValue}>{data.customerInfo?.phone || "No proporcionado"}</Text>
+          </View>
+        </View>
+
+
+        {/* Summary Cards */}
+        <View style={styles.cardContainer}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Medidas</Text>
+            <Text style={styles.cardText}>Alto ventana: {formatMeasurement(windowHeight)}m</Text>
+            <Text style={styles.cardText}>Ancho ventana: {formatMeasurement(windowWidth)}m</Text>
+            <Text style={styles.cardText}>Multiplicador cabezal: x {data.multiplier}</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Tela</Text>
+            <Text style={styles.cardText}>Nombre:{data.selectedFabric ? data.fabricName : "No seleccionado"}</Text>
+            <Text style={styles.cardText}>Ancho: {data.selectedFabric ? data.fabricWidth : "No seleccionado"}</Text>
+            <Text style={styles.cardText}>Precio: ${ data.selectedFabric ? data.fabricPrice : "No seleccionado"}</Text>
+            {/* {shouldOptimize && <Text style={styles.cardText}>✨ Corte optimizado</Text>} */}
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Confección</Text>
+            <Text style={styles.cardText}>Técnica:{anchoTelaCubreAlto ? "Corte simple" : `${panosNecesarios} paños`}</Text>
+            <Text style={styles.cardText}>Total confección:${costoConfeccion}</Text>
+          </View>
+        </View>
+
+        {/* Cost Breakdown */}
+        <View style={styles.costSection}>
+          <View style={styles.costHeader}>
+            <Text style={styles.costHeader}>$ Desglose de Costos</Text>
+          </View>
+          <View style={styles.costContent}>
+            {costItems.map((item, index) => (
+              <View key={index} style={styles.costItem}>
+                <Text style={styles.costLabel}>{item.label}</Text>
+                <Text style={styles.costDetails}>{item.details}</Text>
+                <Text style={styles.costAmount}>${item.amount.toLocaleString()}</Text>
+              </View>
+            ))}
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalAmount}>${total.toLocaleString()}</Text>
+            </View>
+          </View>
+        </View>
+
+       
+        {/* Info Sections */}
+        <View style={styles.infoSection}>
+          <View style={[styles.infoCard, styles.includeCard]}>
+            <Text style={styles.infoTitle}> Más Información</Text>
+            <Text style={styles.infoText}>• La toma de medidas se realiza previa seña de cortinas</Text>
+            <Text style={styles.infoText}>• La instalación se coordina una vez que las cortinas estén listas</Text>
+             {!data.hasInstallation && <Text style={styles.infoText}>• Riel y soportes</Text>}
+          </View>
+
+          <View style={[styles.infoCard, styles.importantCard]}>
+            <Text style={styles.infoTitle}> Importante</Text>
+            <Text style={styles.infoText}>• Precios válidos por 30 días</Text>
+            <Text style={styles.infoText}>• Para comenzar el trabajo se requiere seña del 50%</Text>
+            <Text style={styles.infoText}>• Formas de pago: Efectivo, transferencia, Homebanking,Mercado Pago, cuenta DNI, Modo</Text>
+            <Text style={styles.infoText}>• Tiempo de entrega estimado: 10-20 días hábiles</Text>
+            <Text style={styles.infoText}>• Garantía de 1 año</Text>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+export default PresupuestoPDF;
