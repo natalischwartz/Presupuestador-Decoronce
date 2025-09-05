@@ -65,20 +65,20 @@ const rodStyles = [
 
 export const HeaderStyleStep = ({ data, updateData }) => {
   // Determinar qué estilos mostrar basado en si hay riel o barral
-  const handleStyleSelect = (styleId) => {
+  const handleStyleSelect = (styleName) => {
     const allStyles = [...railStyles, ...rodStyles];
-    const style = allStyles.find((s) => s.id === styleId);
+    const style = allStyles.find((s) => s.id === styleName);
     if (style) {
       updateData({
-        headerStyle: styleId,
+        headerStyle: styleName,
         multiplier: style.multiplier,
         headerType: style.type, // esto guarda si es riel o barral
       });
     }
   };
 
-  const isStyleSelected = (styleId) => {
-    return data.headerStyle === styleId;
+  const isStyleSelected = (styleName) => {
+    return data.headerStyle === styleName;
   };
 
   // console.log("esto es lo que me devuelve data " , data)

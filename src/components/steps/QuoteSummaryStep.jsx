@@ -223,6 +223,8 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
           anchoTelaCubreAlto ? "Corte simple" : "Confección por paños"
         }`,
         `Total confección: $${costoConfeccion.toLocaleString()}`,
+        `Tipo de cabezal:${data.headerType}`,
+        `Modelo de cabezal:${data.headerStyle}`,
       ],
     },
   ];

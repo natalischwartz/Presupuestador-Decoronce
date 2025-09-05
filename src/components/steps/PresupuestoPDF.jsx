@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#ffffff',
-    padding: 30,
+    padding: 10,
     fontFamily: 'Helvetica',
   },
   header: {
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     width: '30%',
     border: '1 solid #e0e0e0',
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     backgroundColor: '#f8f9fa',
   },
   cardTitle: {
@@ -67,21 +67,22 @@ const styles = StyleSheet.create({
   costSection: {
     border: '1 solid #e0e0e0',
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   costHeader: {
     backgroundColor: '#3E6553',
-    padding: 12,
+    padding: 5,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
+    color:"#fafafa"
   },
   costHeaderTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#fafafa',
   },
   costContent: {
-    padding: 15,
+    padding: 10,
   },
   costItem: {
     flexDirection: 'row',
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   contactSection: {
     border: '1 solid #e0e0e0',
     borderRadius: 8,
-    padding: 15,
+    padding: 8,
     marginBottom: 20,
     backgroundColor: '#f8f9fa',
   },
@@ -154,13 +155,13 @@ const styles = StyleSheet.create({
   infoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 2,
   },
   infoCard: {
     width: '48%',
     border: '1 solid #e0e0e0',
     borderRadius: 8,
-    padding: 12,
+    padding: 8,
   },
   infoTitle: {
     fontSize: 12,
@@ -381,6 +382,7 @@ export const PresupuestoPDF = ({ data }) => {
             <Text style={styles.cardTitle}>Confección</Text>
             <Text style={styles.cardText}>Técnica:{anchoTelaCubreAlto ? "Corte simple" : `${panosNecesarios} paños`}</Text>
             <Text style={styles.cardText}>Total confección:${costoConfeccion}</Text>
+            <Text style={styles.cardText}>Modelo de cabezal ${costoConfeccion}</Text>
           </View>
         </View>
 
