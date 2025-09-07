@@ -68,9 +68,10 @@ export const HeaderStyleStep = ({ data, updateData }) => {
   const handleStyleSelect = (styleName) => {
     const allStyles = [...railStyles, ...rodStyles];
     const style = allStyles.find((s) => s.id === styleName);
+    // console.log(style)
     if (style) {
       updateData({
-        headerStyle: styleName,
+        headerStyle: style.name,
         multiplier: style.multiplier,
         headerType: style.type, // esto guarda si es riel o barral
       });
@@ -82,6 +83,7 @@ export const HeaderStyleStep = ({ data, updateData }) => {
   };
 
   // console.log("esto es lo que me devuelve data " , data)
+  
 
   return (
     <div className="space-y-6">

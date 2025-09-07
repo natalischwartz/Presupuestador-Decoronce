@@ -14,8 +14,8 @@ export const FabricSelectionStep = ({ data, updateData }) => {
       _id: "roller-screen",
       name: "Roller Screen",
       description: "Tela traslúcida que permite el paso de luz natural mientras brinda privacidad",
-      width: "2.80m",
-      price: 4500,
+      width: "2.50m",
+      price: Number(import.meta.env.VITE_ROLLER_SCREEN_PRICE),
       image: {
         secure_url: "/Imagenes/colores-roller-sunscreen.jpg" // Ruta a tu imagen
       }
@@ -24,8 +24,8 @@ export const FabricSelectionStep = ({ data, updateData }) => {
       _id: "roller-blackout",
       name: "Roller Blackout",
       description: "Tela opaca que bloquea completamente la luz exterior, ideal para dormitorios",
-      width: "2.80m",
-      price: 5200,
+      width: "2.50m",
+      price:  Number(import.meta.env.VITE_ROLLER_BLACKOUT_PRICE),
       image: {
         secure_url: "Imagenes/colores-blackout-roller.jpg" // Ruta a tu imagen
       }
