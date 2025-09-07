@@ -1,15 +1,17 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import logo from "/Imagenes/logo-decoronce-op2.png";
+
+
 
 // Precios base (deben coincidir con los de QuoteSummaryStep)
 const BASE_PRICES = {
-  CONFECTION: Number(import.meta.env.VITE_CONFECTION_PRICE) || 300,
-  CONFECTION_EXTRA: Number(import.meta.env.VITE_CONFECTION_EXTRA_PRICE) || 400,
-  RAIL: Number(import.meta.env.VITE_RAIL_PRICE) || 450,
-  INSTALLATION: Number(import.meta.env.VITE_INSTALLATION_PRICE) || 2500,
-  MEASUREMENT_CABA: Number(import.meta.env.VITE_MEASUREMENT_CABA_PRICE) || 1000,
-  MEASUREMENT_GBA: Number(import.meta.env.VITE_MEASUREMENT_GBA_PRICE) || 1500,
+  CONFECTION: Number(import.meta.env.VITE_CONFECTION_PRICE),
+  CONFECTION_EXTRA: Number(import.meta.env.VITE_CONFECTION_EXTRA_PRICE),
+  RAIL: Number(import.meta.env.VITE_RAIL_PRICE),
+  INSTALLATION: Number(import.meta.env.VITE_INSTALLATION_PRICE),
+  MEASUREMENT_CABA: Number(import.meta.env.VITE_MEASUREMENT_CABA_PRICE),
+  MEASUREMENT_GBA: Number(import.meta.env.VITE_MEASUREMENT_GBA_PRICE),
+  ROLLER_SYSTEMS: Number(import.meta.env.VITE_ROLLER_SYSTEM_PRICE || 46400), // Precio por metro del sistema roller
 };
 
 const styles = StyleSheet.create({
@@ -98,6 +100,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#7f8c8d',
     fontStyle: 'italic',
+    alignSelf:'start'
   },
   costAmount: {
     fontSize: 12,
@@ -190,10 +193,7 @@ const styles = StyleSheet.create({
   }
 });
 
-
-
-
-// Función auxiliar para formatear medidas
+  // Función auxiliar para formatear medidas
 function formatMeasurement(value) {
   if (typeof value !== "number" || isNaN(value)) return "--";
   return value.toFixed(2);
@@ -204,144 +204,185 @@ function roundToHalf(value) {
   return Math.ceil(value * 2) / 2;
 }
 
-// Calcular metros de riel necesarios
-const calcularMetrosRiel = (necesitaRiel, windowWidth, cantidadVentanasRiel = 1) => {
-  if (!necesitaRiel || !windowWidth) return 0;
-
-  // Calculamos metros necesarios (redondeando hacia arriba a múltiplos de 0.20m)
-  const metrosPorVentana = Math.ceil(windowWidth / 0.2) * 0.2;
-  return cantidadVentanasRiel * metrosPorVentana;
-};
-
-export const PresupuestoPDF = ({ data }) => {
-
-
-    const obtenerFechaFormateada = () => {
+// Función para obtener fecha formateada
+function obtenerFechaFormateada() {
   const fecha = new Date();
   const año = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // "12" en lugar de "12"
-  const dia = String(fecha.getDate()).padStart(2, '0');      // "05" en lugar de "5"
-  
-  return `${dia}/${mes}/${año}`; // "05/12/2023"
-};
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${dia}/${mes}/${año}`;
+}
+
+export const PresupuestoPDF = ({ data }) => {
+  const isRoller = data.curtainType === "roller";
 
   // 1. Obtener medidas de la cortina
   const getWindowHeight = () => {
     if (data.customHeight) {
       return parseFloat(data.customHeight);
     }
-    return 2.2; // Valor por defecto
+    return 0;
   };
 
   const getWindowWidth = () => {
     if (data.customWidth) {
       return parseFloat(data.customWidth);
     }
-    return 1.4; // Valor por defecto
+    return 0;
   };
 
   const windowHeight = getWindowHeight();
   const windowWidth = getWindowWidth();
 
-  // 2. Cálculo de tela necesaria
-  const anchoConMultiplicadorDeCabezal = windowWidth * (data.multiplier || 2);
-  const altoConAgregados = windowHeight + 0.3 + 0.1; // + dobladillo + cabezal
-
-  // Verificar si el ancho de la tela cubre el alto necesario
-  const anchoNumerico = parseFloat(data.fabricWidth || 3);
-  const anchoTelaCubreAlto = data.selectedFabric ? anchoNumerico > altoConAgregados : false;
-
+  // Declarar todas las variables
+  let costoConfeccion = 0;
+  let costoRiel = 0;
+  let costoTotalTM = 0;
+  let costoTotalTela = 0;
   let metrosTelaNecesarios = 0;
   let panosNecesarios = 1;
+  let costoSistemaRoller = 0;
+  let costoInstalacion = 0;
+  let anchoTelaCubreAlto = false;
+  let anchoNumerico = 0;
+  let metrosRiel = 0;
 
-  if (anchoTelaCubreAlto) {
-    // Caso 1: El ancho de la tela cubre el alto
-    metrosTelaNecesarios = roundToHalf(anchoConMultiplicadorDeCabezal);
+  if (isRoller) {
+    // CÁLCULOS PARA CORTINAS ROLLER
+    metrosTelaNecesarios = windowHeight * windowWidth;
+    costoTotalTela = metrosTelaNecesarios * data.fabricPrice;
+    costoSistemaRoller = windowWidth * BASE_PRICES.ROLLER_SYSTEMS;
+    costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
+    costoTotalTM = data.necesitaTM
+      ? (data.cantidadVentanas || 1) *
+        (data.ubicacionTM === "CABA"
+          ? BASE_PRICES.MEASUREMENT_CABA
+          : BASE_PRICES.MEASUREMENT_GBA)
+      : 0;
   } else {
-    // Caso 2: Necesitamos calcular paños
-    panosNecesarios = Math.ceil(anchoConMultiplicadorDeCabezal / anchoNumerico);
-    metrosTelaNecesarios = panosNecesarios * altoConAgregados;
+    // CÁLCULOS PARA CORTINAS TRADICIONALES
+    const anchoConMultiplicadorDeCabezal = windowWidth * data.multiplier;
+    const altoConAgregados = windowHeight + 0.3 + 0.1;
+
+    anchoNumerico = parseFloat(data.fabricWidth);
+    anchoTelaCubreAlto = data.selectedFabric
+      ? anchoNumerico > altoConAgregados
+      : false;
+
+    if (anchoTelaCubreAlto) {
+      metrosTelaNecesarios = roundToHalf(anchoConMultiplicadorDeCabezal);
+    } else {
+      panosNecesarios = Math.ceil(anchoConMultiplicadorDeCabezal / anchoNumerico);
+      metrosTelaNecesarios = panosNecesarios * altoConAgregados;
+    }
+
+    const precioConfeccion = windowHeight > 2.7
+      ? BASE_PRICES.CONFECTION_EXTRA
+      : BASE_PRICES.CONFECTION;
+
+    costoTotalTela = metrosTelaNecesarios * data.fabricPrice;
+    costoConfeccion = anchoTelaCubreAlto
+      ? metrosTelaNecesarios * precioConfeccion
+      : Math.ceil(panosNecesarios * anchoNumerico) * precioConfeccion;
+
+    const calcularMetrosRiel = () => {
+      if (!data.necesitaRiel || !windowWidth) return 0;
+      const metrosPorVentana = Math.ceil(windowWidth / 0.2) * 0.2;
+      return (data.cantidadVentanasRiel || 1) * metrosPorVentana;
+    };
+
+    metrosRiel = calcularMetrosRiel();
+    costoRiel = metrosRiel * BASE_PRICES.RAIL;
+    costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
+    costoTotalTM = data.necesitaTM
+      ? (data.cantidadVentanas || 1) *
+        (data.ubicacionTM === "CABA"
+          ? BASE_PRICES.MEASUREMENT_CABA
+          : BASE_PRICES.MEASUREMENT_GBA)
+      : 0;
   }
 
-  // 3. Cálculo de costos
-  // Precio de confección según altura
-  const precioConfeccion = windowHeight > 2.7 ? BASE_PRICES.CONFECTION_EXTRA : BASE_PRICES.CONFECTION;
-
-  // Costo de tela
-  const costoTotalTela = metrosTelaNecesarios * (data.fabricPrice || 0);
-
-  // Costo de confección
-  const costoConfeccion = anchoTelaCubreAlto
-    ? metrosTelaNecesarios * precioConfeccion
-    : Math.ceil(panosNecesarios * anchoNumerico) * precioConfeccion;
-
-  /*************RIEL *****************/
-  const metrosRiel = calcularMetrosRiel(
-    data.necesitaRiel, 
-    windowWidth, 
-    data.cantidadVentanasRiel || 1
-  );
-  const costoRiel = metrosRiel * BASE_PRICES.RAIL;
-
-  // Costo de instalación
-  const costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
-
-  /*************TOMA DE MEDIDAS *****************/
-  const costoTotalTM = data.necesitaTM
-    ? (data.cantidadVentanas || 1) *
-      (data.ubicacionTM === "CABA"
-        ? BASE_PRICES.MEASUREMENT_CABA
-        : BASE_PRICES.MEASUREMENT_GBA)
-    : 0;
-
   // Total general
-  const subtotal = costoTotalTela + costoConfeccion + costoRiel + costoInstalacion + costoTotalTM;
+  const subtotal = isRoller
+    ? costoTotalTela + costoSistemaRoller + costoTotalTM + costoInstalacion
+    : costoTotalTela + costoConfeccion + costoRiel + costoTotalTM + costoInstalacion;
+
   const total = subtotal;
 
-  // Datos para mostrar
-  const costItems = [
-    {
-      label: 'Tela',
-      amount: costoTotalTela,
-      details: `${metrosTelaNecesarios.toFixed(2)}m x $${data.fabricPrice || 0}/m`,
-    },
-    {
-      label: 'Confección',
-      amount: costoConfeccion,
-      details: `${anchoTelaCubreAlto ? 'Corte simple' : `${panosNecesarios} paños`}`,
-    },
-    {
-      label: 'Toma de medidas',
-      amount: costoTotalTM,
-      included: data.necesitaTM,
-      details: data.necesitaTM
-        ? `${data.cantidadVentanas || 1} ventana(s) en ${data.ubicacionTM || 'CABA'}`
-        : 'No solicitado',
-    },
-    {
-      label: 'Rieles',
-      amount: costoRiel,
-      included: data.necesitaRiel,
-      details: data.necesitaRiel
-        ? `${metrosRiel.toFixed(2)}m (${data.cantidadVentanasRiel || 1} ventana(s))`
-        : 'No solicitado',
-    },
-    {
-      label: 'Instalación',
-      amount: costoInstalacion,
-      included: data.hasInstallation,
-      details: data.hasInstallation
-        ? 'Incluye instalación profesional'
-        : 'No requiere',
-    },
-  ];
+  // Cost items según tipo de cortina
+  const costItems = isRoller
+    ? [
+        {
+          label: "Tela",
+          amount: costoTotalTela,
+          details: `${metrosTelaNecesarios.toFixed(2)}m² x $${data.fabricPrice}/m²`,
+        },
+        {
+          label: "Sistema roller",
+          amount: costoSistemaRoller,
+          details: `${formatMeasurement(windowWidth)}m x $${BASE_PRICES.ROLLER_SYSTEMS}/m`,
+        },
+        {
+          label: "Toma de medidas",
+          amount: costoTotalTM,
+          included: data.necesitaTM,
+          details: data.necesitaTM
+            ? `${data.cantidadVentanas} ventana(s) en ${data.ubicacionTM}`
+            : "No solicitado",
+        },
+        {
+          label: "Instalación",
+          amount: costoInstalacion,
+          included: data.hasInstallation,
+          details: data.hasInstallation
+            ? "Incluye instalación profesional"
+            : "No requiere",
+        },
+      ]
+    : [
+        {
+          label: "Tela",
+          amount: costoTotalTela,
+          details: `${metrosTelaNecesarios.toFixed(2)}m x $${data.fabricPrice}/m`,
+        },
+        {
+          label: "Confección",
+          amount: costoConfeccion,
+          details: `${anchoTelaCubreAlto ? "Corte simple" : `${panosNecesarios} paños`}`,
+        },
+        {
+          label: "Toma de medidas",
+          amount: costoTotalTM,
+          included: data.necesitaTM,
+          details: data.necesitaTM
+            ? `${data.cantidadVentanas} ventana(s) en ${data.ubicacionTM}`
+            : "No solicitado",
+        },
+        {
+          label: "Rieles",
+          amount: costoRiel,
+          included: data.necesitaRiel,
+          details: data.necesitaRiel
+            ? `${metrosRiel.toFixed(2)}m (${data.cantidadVentanasRiel} ventana(s))`
+            : "No solicitado",
+        },
+        {
+          label: "Instalación",
+          amount: costoInstalacion,
+          included: data.hasInstallation,
+          details: data.hasInstallation
+            ? "Incluye instalación profesional"
+            : "No requiere",
+        },
+      ];
+
 
   return(
     <Document>
       <Page size="A4" style={styles.page}>
         <Image src={"https://res.cloudinary.com/dzkzrdbfu/image/upload/v1757032272/logo-decoronce-op2_xy9nd8.png"} style={styles.logo}/>
         <Text style={styles.subtitle}>
-          {obtenerFechaFormateada}
+            {obtenerFechaFormateada()}
         </Text>
         {/* Header */}
         <Text style={styles.header}>Resumen del Presupuesto</Text>
@@ -362,27 +403,45 @@ export const PresupuestoPDF = ({ data }) => {
 
 
         {/* Summary Cards */}
-        <View style={styles.cardContainer}>
+          <View style={styles.cardContainer}>
+            {/* Card de Medidas (común a ambos tipos) */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Medidas</Text>
             <Text style={styles.cardText}>Alto ventana: {formatMeasurement(windowHeight)}m</Text>
             <Text style={styles.cardText}>Ancho ventana: {formatMeasurement(windowWidth)}m</Text>
-            <Text style={styles.cardText}>Multiplicador cabezal: x {data.multiplier}</Text>
+             {!isRoller && (
+              <Text style={styles.cardText}>Multiplicador: x{data.multiplier}</Text>
+            )}
+             {isRoller && (
+              <Text style={styles.cardText}>Metros cuadrados: {(windowHeight * windowWidth).toFixed(2)}m²</Text>
+            )}
           </View>
 
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Tela</Text>
             <Text style={styles.cardText}>Nombre:{data.selectedFabric ? data.fabricName : "No seleccionado"}</Text>
-            <Text style={styles.cardText}>Ancho: {data.selectedFabric ? data.fabricWidth : "No seleccionado"}</Text>
-            <Text style={styles.cardText}>Precio: ${ data.selectedFabric ? data.fabricPrice : "No seleccionado"}</Text>
-            {/* {shouldOptimize && <Text style={styles.cardText}>✨ Corte optimizado</Text>} */}
+            {!isRoller && (
+              <Text style={styles.cardText}>Ancho: {data.fabricWidth || "No seleccionado"}</Text>
+            )}
+            <Text style={styles.cardText}>Precio: ${data.fabricPrice || "No seleccionado"}{isRoller ? "/m²" : "/m"}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Confección</Text>
-            <Text style={styles.cardText}>Técnica:{anchoTelaCubreAlto ? "Corte simple" : `${panosNecesarios} paños`}</Text>
-            <Text style={styles.cardText}>Total confección:${costoConfeccion}</Text>
-            <Text style={styles.cardText}>Modelo de cabezal ${costoConfeccion}</Text>
+            {isRoller ? (
+              <>
+                <Text style={styles.cardTitle}>Sistema Roller</Text>
+                <Text style={styles.cardText}>Ancho: {formatMeasurement(windowWidth)}m</Text>
+                <Text style={styles.cardText}>Precio: ${BASE_PRICES.ROLLER_SYSTEMS}/m</Text>
+                <Text style={styles.cardText}>Total: ${costoSistemaRoller.toLocaleString()}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.cardTitle}>Confección</Text>
+                <Text style={styles.cardText}>Técnica: {anchoTelaCubreAlto ? "Corte simple" : `${panosNecesarios} paños`}</Text>
+                <Text style={styles.cardText}>Total: ${costoConfeccion.toLocaleString()}</Text>
+                <Text style={styles.cardText}>Cabezal: {data.headerStyle || "--"}</Text>
+              </>
+            )}
           </View>
         </View>
 
@@ -406,7 +465,6 @@ export const PresupuestoPDF = ({ data }) => {
           </View>
         </View>
 
-       
         {/* Info Sections */}
         <View style={styles.infoSection}>
           <View style={[styles.infoCard, styles.includeCard]}>

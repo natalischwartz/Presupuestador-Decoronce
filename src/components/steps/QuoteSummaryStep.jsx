@@ -195,7 +195,6 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
           details: [
             `Alto ventana: ${formatMeasurement(windowHeight)}m`,
             `Ancho ventana: ${formatMeasurement(windowWidth)}m`,
-            `Multiplicador cabezal: x${data.multiplier}`,
             // `Ancho total cortina: ${anchoConMultiplicadorDeCabezal.toFixed(2)}m`,
             // `Alto total cortina: ${altoConAgregados.toFixed(2)}m`,
           ],
@@ -222,7 +221,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
           title: "Sistema",
           details: [
             `Sistema roller: $${BASE_PRICES.ROLLER_SYSTEMS}/m lineal`,
-            `Ancho sistema: ${formatMeasurement(windowWidth)}m`,
+            `Largo sistema enrollable: ${formatMeasurement(windowWidth)}m`,
             `Total sistema: $${costoSistemaRoller.toLocaleString()}`,
           ],
         },
@@ -285,7 +284,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
           amount: costoSistemaRoller,
           icon: Settings,
           details: `${formatMeasurement(windowWidth)}m x $${
-            BASE_PRICES.ROLLER_SYSTEM
+            BASE_PRICES.ROLLER_SYSTEMS
           }/m`,
         },
         {
@@ -711,16 +710,16 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
                 <li className="flex items-start gap-2">
                   <span>•</span>
                   <span>
-                    Para señar el trabajo se solicita el 50% del total.
-                    <br />
-                    La toma de medidas se realiza previa seña de cortinas y
-                    tiene un costo de $
+                    Para señar el trabajo se solicita el 50% del total.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span >•</span>
+                    <span> La toma de medidas se realiza previa seña de cortinas</span>
+                  </li>
                     {/* {costoMedidas.toLocaleString()}{" "} */}
-                    {data.ubicacionTM === "CABA"
+                    {/* {data.ubicacionTM === "CABA"
                       ? BASE_PRICES.MEASUREMENT_CABA
-                      : BASE_PRICES.MEASUREMENT_GBA}
-                  </span>
-                </li>
+                      : BASE_PRICES.MEASUREMENT_GBA} */}
 
                 {data.hasInstallation && (
                   <li className="flex items-start gap-2">
