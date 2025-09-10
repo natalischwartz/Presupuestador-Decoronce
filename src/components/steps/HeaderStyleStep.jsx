@@ -14,7 +14,7 @@ const railStyles = [
   {
     id: "pinch-1",
     name: "Pellizco 1",
-    multiplier: 2,
+    multiplier: 1.5,
     description: "Pliegue simple y elegante",
   },
   {
@@ -53,13 +53,13 @@ const rodStyles = [
   {
     id: "rod-pocket",
     name: "Jareta para barral",
-    multiplier: 1.2,
+    multiplier: 2,
     description: "Bolsillo para pasar el barral",
   },
   {
     id: "hidden-tabs",
     name: "Presillas ocultas",
-    multiplier: 1.2,
+    multiplier: 2,
     description: "Presillas discretas en la parte trasera",
   },
 ];
