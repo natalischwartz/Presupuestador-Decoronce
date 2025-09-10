@@ -30,6 +30,12 @@ const BASE_PRICES = {
 };
 
 export const QuoteSummaryStep = ({ data, updateData }) => {
+
+
+  // console.log("Valor de VITE_INSTALLATION_PRICE:", import.meta.env.VITE_INSTALLATION_PRICE);
+  console.log("hasInstallation:", data.hasInstallation);
+  
+
   const isRoller = data.curtainType === "roller";
 
   // 1. Obtener medidas de la cortina
@@ -75,9 +81,6 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     // Costo del sistema roller (ancho x precio por metro)
     costoSistemaRoller = windowWidth * BASE_PRICES.ROLLER_SYSTEMS;
 
-    // Instalación
-    costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
-
     // Toma de medidas
     costoTotalTM = data.necesitaTM
       ? (data.cantidadVentanas || 1) *
@@ -100,7 +103,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     // console.log(anchoNumerico);//devuelve 3
 
     anchoTelaCubreAlto = data.selectedFabric
-      ? anchoNumerico > altoConAgregados
+      ? anchoNumerico >= altoConAgregados
       : false;
     // console.log(anchoTelaCubreAlto); //boolean
 
@@ -135,7 +138,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     costoConfeccion = anchoTelaCubreAlto
       ? metrosTelaNecesarios * precioConfeccion
       : Math.ceil(panosNecesarios * anchoNumerico) * precioConfeccion;
-    console.log(costoConfeccion);
+    // console.log(costoConfeccion);
 
     /*************RIEL *****************/
     //Costo de riel. si el cliente quiere o no
@@ -149,6 +152,9 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
 
     const metrosRiel = calcularMetrosRiel();
     costoRiel = metrosRiel * BASE_PRICES.RAIL;
+
+     // Instalación
+    costoInstalacion = data.hasInstallation ? BASE_PRICES.INSTALLATION : 0;
 
     costoTotalTM = data.necesitaTM
       ? (data.cantidadVentanas || 1) *
@@ -265,6 +271,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
             }`,
             `Total confección: $${costoConfeccion.toLocaleString()}`,
             `Modelo de cabezal:${data.headerStyle}`,
+            `Tipo de cabezal:${data.headerType}`,
           ],
         },
       ];

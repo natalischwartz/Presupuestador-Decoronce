@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { Button } from "../ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Waves } from "lucide-react";
+import { Waves, CheckCircle, Plus } from "lucide-react";
 
 const railStyles = [
   {
@@ -63,27 +64,32 @@ const rodStyles = [
   },
 ];
 
+// console.log("railStyles:", railStyles);
+// console.log("rodStyles:", rodStyles);
+
 export const HeaderStyleStep = ({ data, updateData }) => {
   // Determinar qué estilos mostrar basado en si hay riel o barral
-  const handleStyleSelect = (styleName) => {
+  const handleStyleSelect = (styleId) => {
     const allStyles = [...railStyles, ...rodStyles];
-    const style = allStyles.find((s) => s.id === styleName);
+    const style = allStyles.find((s) => s.id === styleId);
     // console.log(style)
     if (style) {
       updateData({
-        headerStyle: style.name,
+        headerStyle: style.id,
         multiplier: style.multiplier,
-        headerType: style.type, // esto guarda si es riel o barral
+        headerType: railStyles.some(s => s.id === styleId) ? 'rail' : 'rod',
       });
     }
   };
 
-  const isStyleSelected = (styleName) => {
-    return data.headerStyle === styleName;
+  const isStyleSelected = (styleId) => {
+    return data.headerStyle === styleId;
   };
 
-  // console.log("esto es lo que me devuelve data " , data)
-  
+ // Obtener el estilo seleccionado para mostrar información
+  const selectedStyle = [...railStyles, ...rodStyles].find(
+    s => s.id === data.headerStyle
+  );
 
   return (
     <div className="space-y-6">
@@ -125,25 +131,44 @@ export const HeaderStyleStep = ({ data, updateData }) => {
           </div>
         </div>
       
-
-      {data.headerStyle && (
+      {/* {console.log("Found style:", [...railStyles, ...rodStyles].find(s => s.id === data.headerStyle))} */}
+      
+   
+     {data.headerStyle && selectedStyle && (
         <div className="text-center p-4 bg-success/10 rounded-lg border border-success/20">
           <p className="text-success-foreground text-sm">
             Estilo seleccionado:{" "}
-            <strong>
-              {
-                [...railStyles, ...rodStyles].find(
-                  (s) => s.id === data.headerStyle
-                )?.name
-              }
-            </strong>{" "}
-            {/* - Multiplicador: <strong>x{data.multiplier}</strong> */}
+            <strong>{selectedStyle.name}</strong>{" "}
+            - Multiplicador: <strong>x{selectedStyle.multiplier}</strong>
           </p>
         </div>
       )}
+    {/* Botones de acción */}
+      <div className="flex justify-between mt-8">
+        <Button
+          variant="outline"
+          // onClick={addNewWindow}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Agregar otra ventana
+        </Button>
+
+        <Button
+          // onClick={finishBudget}
+          // disabled={!windows.every(window => window.headerStyle)}
+          className="flex items-center gap-2"
+        >
+          <CheckCircle className="h-4 w-4" />
+          Finalizar presupuesto
+        </Button>
+      </div>
     </div>
   );
+  
 };
+
+
 
 // Componente de tarjeta reutilizable
 const StyleCard = ({ style, isSelected, onSelect }) => (
