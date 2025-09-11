@@ -266,7 +266,7 @@ export const PresupuestoPDF = ({ data }) => {
 
     anchoNumerico = parseFloat(data.fabricWidth);
     anchoTelaCubreAlto = data.selectedFabric
-      ? anchoNumerico > altoConAgregados
+      ? anchoNumerico >= altoConAgregados
       : false;
 
     if (anchoTelaCubreAlto) {
