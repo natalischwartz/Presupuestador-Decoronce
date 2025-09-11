@@ -262,7 +262,7 @@ export const PresupuestoPDF = ({ data }) => {
   } else {
     // CÁLCULOS PARA CORTINAS TRADICIONALES
     const anchoConMultiplicadorDeCabezal = windowWidth * data.multiplier;
-    const altoConAgregados = windowHeight + 0.2 + 0.1;
+    const altoConAgregados = (windowHeight + 0.2 + 0.1).toFixed(2);
 
     anchoNumerico = parseFloat(data.fabricWidth);
     anchoTelaCubreAlto = data.selectedFabric

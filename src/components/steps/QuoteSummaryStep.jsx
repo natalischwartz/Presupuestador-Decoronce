@@ -92,9 +92,9 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     // CÁLCULOS PARA CORTINAS TRADICIONALES
     // 2. Cálculo de tela necesaria
     const anchoConMultiplicadorDeCabezal = windowWidth * data.multiplier;
-    console.log(anchoConMultiplicadorDeCabezal);
-    const altoConAgregados = windowHeight + 0.2 + 0.1; // + dobladillo + cabezal
-    // console.log(altoConAgregados)
+    // console.log(anchoConMultiplicadorDeCabezal);
+    const altoConAgregados = (windowHeight + 0.2 + 0.1).toFixed(2); // + dobladillo + cabezal
+    console.log(altoConAgregados)
 
     // Verificar si el ancho de la tela cubre el alto necesario
     //hay que pasar el data.fabricWidth a solo numero asi compara
@@ -105,7 +105,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     anchoTelaCubreAlto = data.selectedFabric
       ? anchoNumerico >= altoConAgregados
       : false;
-    // console.log(anchoTelaCubreAlto); //boolean
+    console.log(anchoTelaCubreAlto); //boolean
 
     //Para redondear al múltiplo de 0.5 más cercano (hacia arriba)
     function roundToHalf(value) {
