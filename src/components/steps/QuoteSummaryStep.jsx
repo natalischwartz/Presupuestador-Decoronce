@@ -93,7 +93,7 @@ export const QuoteSummaryStep = ({ data, updateData }) => {
     // 2. Cálculo de tela necesaria
     const anchoConMultiplicadorDeCabezal = windowWidth * data.multiplier;
     console.log(anchoConMultiplicadorDeCabezal);
-    const altoConAgregados = windowHeight + 0.3 + 0.1; // + dobladillo + cabezal
+    const altoConAgregados = windowHeight + 0.2 + 0.1; // + dobladillo + cabezal
     // console.log(altoConAgregados)
 
     // Verificar si el ancho de la tela cubre el alto necesario
